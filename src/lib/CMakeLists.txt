@@ -11,6 +11,6 @@ if(ENABLE_TESTING)
     add_subdirectory(tests)
 endif()
 
-add_library(lib input_reader.c)
+add_library(lib lib.c)
 
 target_include_directories(lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
