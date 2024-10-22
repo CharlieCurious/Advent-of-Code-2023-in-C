@@ -5,7 +5,7 @@
 #include <string.h>
 
 
-StringArray *read_lines(char *filename, int max_lines, int max_length) {
+StringArray *read_lines(FILE *fp, int max_lines, int max_length) {
     FILE *file;
     char buffer[max_length];
     
@@ -15,31 +15,29 @@ StringArray *read_lines(char *filename, int max_lines, int max_length) {
         return NULL;
     }
 
-    file = fopen(filename, "r");
-    if (file == NULL) {
-        perror("Error opening file");
-        goto cleanup;
-    }
-
     unsigned int count = 0;
-    while (fgets(buffer, max_length, file)) {
+    while (fgets(buffer, max_length, fp)) {
         if (count >= max_lines) {
             printf("Maximum number of lines (%d) exceeded.\n", max_lines);
             break;
         }
 
-        lines[count] = malloc(strlen(buffer) + 1);
+        size_t len = strlen(buffer);
+        if (len > 0 && buffer[len-1] == '\n') {
+            buffer[len - 1] = '\0';
+        }
+
+        if (len == 0) {
+            continue;
+        }
+
+        lines[count] = malloc(len + 1);
         if (lines[count] == NULL) {
             perror("Failed to allocate memory for line.");
             goto cleanup;
         }
         
-        size_t len = strlen(buffer);
-        if (len > 0 && buffer[len-1] == '\n') {
-            buffer[len - 1] = '\0';
-        }
-        
-        strncpy(lines[count], buffer, max_length);
+        strcpy(lines[count], buffer);
         count++;
     }
 
@@ -51,18 +49,16 @@ StringArray *read_lines(char *filename, int max_lines, int max_length) {
     array->strings = lines;
     array->size = count;
 
-    fclose(file);
     return array;
 
 cleanup:
     if (lines != NULL) {
         for (size_t i = 0; i < count; i++) {
-            free(lines[i]);
+            if (lines[i] != NULL) {
+                free(lines[i]);
+            }
         }
         free(lines);
-    }
-    if (file != NULL) {
-        fclose(file);
     }
     return NULL;
 }
@@ -72,8 +68,12 @@ void free_string_array(StringArray *array) {
         return;
     }
     for (size_t i = 0; i < array->size; i++) {
-        free(array->strings[i]);
+        if (array->strings[i] != NULL) {
+            free(array->strings[i]);
+        }
     }
-    free(array->strings);
+    if (array->strings != NULL) {
+        free(array->strings);
+    }
     free(array);
 }

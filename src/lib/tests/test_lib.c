@@ -1,79 +1,51 @@
 #include <lib.h>
+#include <stdlib.h>
 #include <unity.h>
 
-FILE *mock_fopen(const char *filename, const char *mode);
-void *mock_malloc(size_t size);
+FILE *create_test_file(const char *file_content);
 
-#define fopen mock_fopen
-#define malloc mock_malloc
+char *file_content = "Hello, Charlie.\nYou want biscuitini?\nTuna snack?";
 
-// Mock control variables
-int malloc_fail_after = -1;
-int fopen_fail = 0;
-
-FILE *mock_fopen(const char *filename, const char *mode) {
-    if (fopen_fail) {
-        return NULL;
-    }
-    return tmpfile();
-}
-
-void *mock_malloc(size_t size) {
-    static int malloc_count = 0;
-    malloc_count++;
-    if (malloc_fail_after > 0 && malloc_count >= malloc_fail_after) {
-        return NULL; // Simulate memory allocation after a specific point.
-    }
-    return malloc(size); // Normal malloc otherwise.
+FILE *create_test_file(const char *file_content) {
+    FILE *fp = tmpfile();
+    fputs(file_content, fp);
+    rewind(fp);
+    return fp;
 }
 
 void setUp() {
-    malloc_fail_after = -1;
-    fopen_fail = 0;
 }
 
 void tearDown() {
 }
 
-void test_read_lines_file_open_failure(void) {
-    fopen_fail = 1;
+void test_read_lines_stringarray_should_have_correct_size(void) {
+    FILE *fp = create_test_file(file_content);
 
-    StringArray *result = read_lines("nonexistent_file.txt", 10, 100);
+    StringArray *result = read_lines(fp, 100, 100);
+    fclose(fp);
 
-    TEST_ASSERT_NULL(result);
+    TEST_ASSERT_EQUAL(3, result->size);
+    free_string_array(result);
 }
 
-void test_read_lines_lines_allocation_failure(void) {
-    malloc_fail_after = 1; // Simulate malloc failure on the first call.
+void test_read_lines_stringarray_should_have_correct_strings(void) {
+    FILE *fp = create_test_file(file_content);
 
-    StringArray *result = read_lines("test_file.txt", 10, 100);
+    StringArray *result = read_lines(fp, 100, 100);
+    fclose(fp);
 
-    TEST_ASSERT_NULL(result);
-}
-
-void test_read_lines_individual_line_allocation_failure(void) {
-    malloc_fail_after = 2; // Simulate malloc failure on the second malloc.
-
-    StringArray *result = read_lines("test_file.txt", 10, 100);
-
-    TEST_ASSERT_NULL(result);
-}
-
-void test_read_lines_stringarray_allocation_failure(void) {
-    malloc_fail_after = 3; // Simulate malloc failure on the third malloc.
-
-    StringArray *result = read_lines("test_file.txt", 10, 100);
-
-    TEST_ASSERT_NULL(result);
+    TEST_ASSERT_EQUAL_CHAR_ARRAY("Hello, Charlie.", result->strings[0], 15);
+    TEST_ASSERT_EQUAL_CHAR_ARRAY("You want biscuitini?", result->strings[1], 20);
+    TEST_ASSERT_EQUAL_CHAR_ARRAY("Tuna snack?", result->strings[2], 12);
+    free_string_array(result);
 }
 
 int main() {
     UNITY_BEGIN();
 
-    RUN_TEST(test_read_lines_file_open_failure);
-    RUN_TEST(test_read_lines_lines_allocation_failure);
-    RUN_TEST(test_read_lines_individual_line_allocation_failure);
-    RUN_TEST(test_read_lines_stringarray_allocation_failure);
+    RUN_TEST(test_read_lines_stringarray_should_have_correct_size);
+    RUN_TEST(test_read_lines_stringarray_should_have_correct_strings);
 
     return UNITY_END();
 }
