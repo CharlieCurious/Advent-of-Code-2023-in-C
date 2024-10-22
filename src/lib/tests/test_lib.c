@@ -3,6 +3,7 @@
 #include <unity.h>
 
 FILE *create_test_file(const char *file_content);
+FILE *fp;
 
 char *file_content = "Hello, Charlie.\nYou want biscuitini?\nTuna snack?";
 
@@ -14,26 +15,22 @@ FILE *create_test_file(const char *file_content) {
 }
 
 void setUp() {
+    fp = create_test_file(file_content);
 }
 
 void tearDown() {
+    fclose(fp);
 }
 
 void test_read_lines_stringarray_should_have_correct_size(void) {
-    FILE *fp = create_test_file(file_content);
-
     StringArray *result = read_lines(fp, 100, 100);
-    fclose(fp);
 
     TEST_ASSERT_EQUAL(3, result->size);
     free_string_array(result);
 }
 
 void test_read_lines_stringarray_should_have_correct_strings(void) {
-    FILE *fp = create_test_file(file_content);
-
     StringArray *result = read_lines(fp, 100, 100);
-    fclose(fp);
 
     TEST_ASSERT_EQUAL_CHAR_ARRAY("Hello, Charlie.", result->strings[0], 15);
     TEST_ASSERT_EQUAL_CHAR_ARRAY("You want biscuitini?", result->strings[1], 20);
