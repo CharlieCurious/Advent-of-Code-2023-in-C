@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-unsigned int process_line(char *line);
+unsigned int process_line(const char *line);
 
 int main(int argc, char **argv) {
     if (argc < 2) {
@@ -22,19 +22,19 @@ int main(int argc, char **argv) {
         sum += process_line(lines->strings[i]);
     }
 
-    printf("Answer is: %d\n", sum);
+    printf("Answer is: %u\n", sum);
     free_string_array(lines);
     return EXIT_SUCCESS;
 }
 
-unsigned int process_line(char *line) {
+unsigned int process_line(const char *line) {
     size_t left_index = 0;
     size_t right_index = strlen(line) - 1;
 
-    char number[2] = "00";
+    char number[3] = "00";  // 3 to account for null terminator.
     bool is_left_number_found = false;
     bool is_right_number_found = false;
-    while (left_index <= right_index && !(is_left_number_found && is_right_number_found)) {
+    while (left_index <= right_index) {
 
         if (!is_left_number_found) {
             if (isdigit(line[left_index])) {
@@ -53,6 +53,8 @@ unsigned int process_line(char *line) {
                 right_index--;
             }
         }
+
+        if (is_left_number_found && is_left_number_found) break;
     }
     return atoi(number);
 }
