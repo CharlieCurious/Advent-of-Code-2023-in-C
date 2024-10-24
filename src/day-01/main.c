@@ -6,12 +6,13 @@
 
 unsigned int process_line(char *line);
 
-int main() {
-    FILE *fp = fopen("input.txt", "r");
-    if (fp == NULL) {
-        perror("Failed to open file.");
+int main(int argc, char **argv) {
+    if (argc < 2) {
+        puts("Provide a puzzle input file.");
         exit(EXIT_FAILURE);
     }
+
+    FILE *fp = open_file_or_exit(argv[1]);
 
     StringArray *lines = read_lines(fp, 1001, 128);
     fclose(fp);
@@ -30,28 +31,28 @@ unsigned int process_line(char *line) {
     size_t left_index = 0;
     size_t right_index = strlen(line) - 1;
 
-    printf("Line value: %s\n", line);
-
     char number[2] = "00";
-    printf("Chars value is %s\n", number);
     bool is_left_number_found = false;
     bool is_right_number_found = false;
-    while (left_index <= right_index) {
+    while (left_index <= right_index && !(is_left_number_found && is_right_number_found)) {
 
-        if (isdigit(line[left_index]) && !is_left_number_found) {
-            number[0] = line[left_index];
-            is_left_number_found = true;
-        } else {
-            left_index++;
+        if (!is_left_number_found) {
+            if (isdigit(line[left_index])) {
+                number[0] = line[left_index];
+                is_left_number_found = true;
+            } else {
+                left_index++;
+            }
         }
 
-        if (isdigit(line[right_index]) && !is_right_number_found) {
-            number[1] = line[right_index];
-            is_right_number_found = true;
-        } else {
-            right_index--;
+        if (!is_right_number_found) {
+            if (isdigit(line[right_index])) {
+                number[1] = line[right_index];
+                is_right_number_found = true;
+            } else {
+                right_index--;
+            }
         }
     }
-    printf("line: %s\n", number);
     return atoi(number);
 }

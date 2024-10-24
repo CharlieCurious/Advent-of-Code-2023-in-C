@@ -4,6 +4,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+FILE *open_file_or_exit(const char *file_name) {
+    FILE *file = fopen(file_name, "r");
+    if (file == NULL) {
+        perror("Failed to open input file.");
+        exit(EXIT_FAILURE);
+    }
+}
 
 StringArray *read_lines(FILE *fp, int max_lines, int max_length) {
     FILE *file;
